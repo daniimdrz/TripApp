@@ -116,11 +116,10 @@ export default function EditProfile() {
   return (
     <div className="min-h-screen bg-neutral-50">
       <AppBar 
-        title="Editar Perfil"
         onMenuOpen={() => setIsSideMenuOpen(true)}
       />
       
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-red-50 text-red-500 p-4 rounded-lg">
