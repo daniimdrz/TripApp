@@ -91,7 +91,7 @@ export default function AddTripDetailModal({ isOpen, onClose, tripId, onSuccess 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Añadir nuevo detalle">
       <div className="p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Añadir nuevo detalle
@@ -106,11 +106,9 @@ export default function AddTripDetailModal({ isOpen, onClose, tripId, onSuccess 
         <div className="space-y-4">
           <FormInput
             label="Título"
-            type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej: Comida del segundo día"
-            required
           />
 
           <div>
