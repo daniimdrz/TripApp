@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { AuthProvider, useAuthContext } from '../contexts/AuthContexts';
 import { supabase } from '../lib/supabase';
 import NotificationsPanel from '../components/NotificationsPanel';
+import ProtectedRoute from '../components/ProtectedRoute';
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
 import Layout from '../components/Layout';
@@ -67,7 +68,7 @@ function AppContent({ Component, pageProps }: AppProps) {
   };
 
   return (
-    <AuthProvider>
+    <ProtectedRoute>
       <Component 
         {...pageProps} 
         onNotificationsOpen={handleNotificationsOpen}
@@ -81,14 +82,16 @@ function AppContent({ Component, pageProps }: AppProps) {
         }}
         onNotificationRead={fetchNotificationCount}
       />
-    </AuthProvider>
+    </ProtectedRoute>
   );
 }
 
 export default function App(props: AppProps) {
   return (
-    <Layout>
-      <AppContent {...props} />
-    </Layout>
+    <AuthProvider>
+      <Layout>
+        <AppContent {...props} />
+      </Layout>
+    </AuthProvider>
   );
 }
