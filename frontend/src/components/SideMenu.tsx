@@ -57,9 +57,9 @@ export default function SideMenu({ isOpen, onClose }: SideMenuProps) {
               <StarIcon className="h-6 w-6" />
               <span>Favoritos</span>
             </Link>
-            <Link href="/mis-viajes" className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100">
-              <CalendarIcon className="h-6 w-6" />
-              <span>Mis Viajes</span>
+            <Link href="/mapa" className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100">
+              <MapIcon className="h-6 w-6" />
+              <span>Mapa</span>
             </Link>
             <Link href="/profile" className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100">
               <UserIcon className="h-5 w-5" />
