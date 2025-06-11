@@ -265,7 +265,7 @@ export default function MisViajes({ onNotificationsOpen, notificationCount }: { 
           </div>
         ) : getFilteredTrips().length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {getFilteredTrips().map((trip) => (
+            {getFilteredTrips().map((trip, index) => (
               <TripCard
                 key={trip.id}
                 id={trip.id}
@@ -278,6 +278,7 @@ export default function MisViajes({ onNotificationsOpen, notificationCount }: { 
                 status={trip.status}
                 type={trip.type}
                 onEdit={() => handleEditClick(trip.id)}
+                index={index}
               />
             ))}
           </div>
