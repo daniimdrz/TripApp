@@ -1,0 +1,792 @@
+1. Preparación del entorno y configuración inicial
+Crear repositorio y estructura base
+
+Inicializa un repositorio Git (por ejemplo en GitHub o GitLab).
+
+Clona/abre el proyecto en tu máquina local.
+
+Crea la estructura de carpetas conforme al arquetipo sugerido:
+
+bash
+Copiar
+Editar
+/frontend
+  /public
+  /src
+    /components
+    /pages
+    /styles
+    /lib
+    /hooks
+Añade un .gitignore estándar para Node/Next.js.
+
+Inicializar Next.js con TypeScript y Tailwind CSS
+
+Ejecuta npx create-next-app@latest --typescript y nómbralo, por ejemplo, frontend.
+
+Dentro de /frontend, instala y configura Tailwind CSS:
+
+csharp
+Copiar
+Editar
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+Configura tailwind.config.js con la paleta de colores (primary #4A90E2, accent #FF6F61, neutrales) y activa los plugins necesarios (ej. forms).
+
+Crea o ajusta /styles/globals.css para importar las directivas base de Tailwind (@tailwind base; @tailwind components; @tailwind utilities;).
+
+Confirma que el proyecto arranque (npm run dev) y que puedas usar clases Tailwind en páginas de prueba.
+
+Configurar Supabase
+
+Crea una cuenta en Supabase (https://supabase.com)
+
+Crea un nuevo proyecto y guarda las credenciales (URL y anon key)
+
+Instala el cliente de Supabase:
+
+npm install @supabase/supabase-js
+
+Crea el archivo /src/lib/supabase.ts:
+
+```typescript
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+```
+
+Crea un archivo .env.local con las variables de entorno:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+```
+
+Crea las tablas en Supabase:
+
+```sql
+-- Tabla de usuarios (manejada por Supabase Auth)
+users (
+  id uuid references auth.users,
+  email text,
+  name text,
+  avatar_url text
+)
+
+-- Tabla de viajes
+trips (
+  id uuid default uuid_generate_v4(),
+  name text,
+  start_date date,
+  end_date date,
+  type text check (type in ('solo', 'pareja', 'grupo')),
+  country text,
+  city text,
+  created_by uuid references users(id),
+  cover_image_url text,
+  created_at timestamp with time zone default now()
+)
+
+-- Tabla para compartir viajes
+trip_members (
+  trip_id uuid references trips(id),
+  user_id uuid references users(id),
+  role text check (role in ('owner', 'member')),
+  primary key (trip_id, user_id)
+)
+
+-- Tabla de lugares
+places (
+  id uuid default uuid_generate_v4(),
+  trip_id uuid references trips(id),
+  name text,
+  type text check (type in ('Monumento', 'Restaurante', 'Parque', 'Museo', 'Otro')),
+  location text,
+  visit_date date,
+  notes text,
+  photos_urls text[],
+  created_at timestamp with time zone default now()
+)
+```
+
+Configura las políticas de seguridad (RLS) en Supabase:
+
+```sql
+-- Políticas para trips
+ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuarios pueden ver sus propios viajes"
+  ON trips FOR SELECT
+  USING (auth.uid() = created_by);
+
+CREATE POLICY "Usuarios pueden crear viajes"
+  ON trips FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+CREATE POLICY "Usuarios pueden actualizar sus propios viajes"
+  ON trips FOR UPDATE
+  USING (auth.uid() = created_by);
+
+-- Políticas para trip_members
+ALTER TABLE trip_members ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Miembros pueden ver sus viajes compartidos"
+  ON trip_members FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Políticas para places
+ALTER TABLE places ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuarios pueden ver lugares de sus viajes"
+  ON places FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM trips
+      WHERE trips.id = places.trip_id
+      AND (trips.created_by = auth.uid() OR EXISTS (
+        SELECT 1 FROM trip_members
+        WHERE trip_members.trip_id = trips.id
+        AND trip_members.user_id = auth.uid()
+      ))
+    )
+  );
+```
+
+Configurar autenticación con Supabase
+
+Crea el archivo /src/lib/auth.ts:
+
+```typescript
+import { supabase } from './supabase'
+
+export const signIn = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  return { data, error }
+}
+
+export const signUp = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  })
+  return { data, error }
+}
+
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut()
+  return { error }
+}
+
+export const getSession = async () => {
+  const { data: { session }, error } = await supabase.auth.getSession()
+  return { session, error }
+}
+```
+
+Crea el hook useAuth en /src/hooks/useAuth.ts:
+
+```typescript
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { User } from '@supabase/supabase-js'
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Obtener sesión actual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return { user, loading }
+}
+```
+
+2. Implementar diseño base y componentes reutilizables
+Configurar layout global y tipografía
+
+En /src/pages/_app.tsx, incluye <main className="min-h-screen bg-neutral-50 text-gray-800">…</main>, importando la fuente (Ej. Inter) desde Google Fonts o local.
+
+En tailwind.config.js, asegúrate de definir la familia de fuentes (por ejemplo font-sans: ['Inter', 'sans-serif']).
+
+Crear componentes UI fundamentales (en /src/components)
+
+AppBar.tsx:
+
+Receptor de props: title: string, opcionalmente leftButton y rightButton (por ejemplo "Cancelar" / "Guardar").
+
+Estilos: fondo blanco, sombra ligera, centrado de título con tipografía semibold.
+
+TabBar.tsx:
+
+Recibe lista de pestañas con icono + label y callback de selección.
+
+Estilos: fondo blanco, borde inferior gris claro, tipografía mediana.
+
+TripCard.tsx:
+
+Props: nombre, fechaInicio, fechaFin, estado ("Próximo" | "Activo" | "Finalizado").
+
+Estilos: fondo blanco, esquinas redondeadas (12 px), sombra ligera, internal padding, badge circular azul/verde/gris según estado.
+
+FloatingButton.tsx:
+
+Botón circular (56 px) en bottom-right; icono "+" centrado; color primario o accent según contexto.
+
+FormInput.tsx:
+
+Input estilizado con borde gris claro, icono opcional a la izquierda (calendario, flag, pin…), placeholder dinámico.
+
+DatePicker.tsx:
+
+Combina <FormInput> con icono de calendario; cuando se hace clic abre un date picker nativo de HTML5 (type="date") o un componente ligero.
+
+RadioGroup.tsx:
+
+Opción para "Viaje solo", "En pareja", "En grupo"; estilo de radios personalizados con Tailwind (círculo relleno al seleccionar).
+
+DestinationRow.tsx:
+
+Fila con ícono de bandera al inicio, nombre de país/ciudad y chevron a la derecha.
+
+PlaceCard.tsx:
+
+Similar a TripCard, pero más compacto: thumbnail (80×80 px), título, subtítulo, fecha.
+
+MapGlobal.tsx:
+
+Componente wrapper para Mapbox GL JS o React-Leaflet; acepta lista de marcadores con coordenadas + estado.
+
+BottomNav.tsx:
+
+Barra fija inferior con 4 iconos (Home, Destinos, Mapa, Perfil). Al presionar, hace router.push a la ruta correspondiente.
+
+Configurar rutas y navegación básica
+
+En /src/pages, crea los archivos vacíos que correspondan a cada pantalla (de momento sólo la estructura):
+
+bash
+Copiar
+Editar
+index.tsx
+crear-viaje.tsx
+buscar-destinos.tsx
+seleccionar-ciudad.tsx
+viajes/[id].tsx
+lugares/nuevo.tsx
+mapa-viajes.tsx
+perfil.tsx
+En cada página, importa AppBar y BottomNav (cuando aplique) para garantizar que la navegación está presente.
+
+Prueba que puedas navegar entre páginas usando enlaces <Link href="/crear-viaje">.
+
+3. Desarrollo de pantallas paso a paso
+Nota: Para cada pantalla, primero maqueta la interfaz ("HTML + Tailwind") sin lógica, luego ve incorporando hooks/estado/llamadas a backend.
+
+3.1. Home Screen (/src/pages/index.tsx)
+Maquetar AppBar + TabBar
+
+Usa <AppBar title="Mis viajes" />.
+
+Debajo, <TabBar tabs={["Próximos","Activos","Finalizados"]} onSelect={...} />.
+
+Mantén un estado local de pestaña seleccionada (useState<"Próximos"|"Activos"|"Finalizados">).
+
+Listar tarjetas de viaje de ejemplo
+
+Crea un array mock de objetos { id, nombre, fechaInicio, fechaFin, estado }.
+
+Filtra según la pestaña ("Próximos" muestra sólo los que estado === "Próximo", etc.).
+
+Renderiza <TripCard> para cada item filtrado.
+
+Incluye un espacio vacío (mensaje "No hay viajes" o similar) si el array está vacío.
+
+Añadir FloatingButton para "Crear viaje"
+
+Coloca <FloatingButton onClick={() => router.push('/crear-viaje')} /> en posición fixed bottom-right.
+
+Usa color accent (#FF6F61) y el icono "+" en blanco.
+
+Preparar mock de integración futura con "Obtener viajes"
+
+Crea hook useFetchViajes en /src/hooks/useFetchViajes.ts que por ahora retorna el array mock (luego apuntarás a /api/viajes).
+
+Sustituye el array estático por el resultado de useFetchViajes().
+
+3.2. Crear Nuevo Viaje (/src/pages/crear-viaje.tsx)
+Maquetar AppBar con "Cancelar" y "Guardar"
+
+<AppBar title="Nuevo viaje" leftButton={{ text: "Cancelar", onClick: () => router.back() }} rightButton={{ text: "Guardar", disabled: true, onClick: saveHandler }} />.
+
+Formularios verticales
+
+Nombre del viaje: <FormInput label="Nombre del viaje" placeholder="Ej. Vacaciones en París 2025" value={nombre} onChange={...} />.
+
+Fecha de inicio / Fecha de fin: Dos <DatePicker> lado a lado (usa grid grid-cols-2 gap-4).
+
+Tipo de viaje (RadioGroup): <RadioGroup options={["Viaje solo","En pareja","En grupo"]} value={tipo} onChange={...} />.
+
+Con efecto "condition": si tipo === "En pareja" o "En grupo", renderiza debajo <FormInput label="Agregar acompañantes" ... />.
+
+Seleccionar destino: <button className="btn-with-icon" onClick={() => router.push('/buscar-destinos')}> con icono de bandera y texto.
+
+Foto de portada (opcional):
+
+Un contenedor <div className="border-2 border-dashed rounded p-4 flex flex-col items-center justify-center"> con icono de cámara y texto "Foto de portada (opcional)".
+
+De momento, sólo placeholder; en fases posteriores se agregará la subida de imagen.
+
+Estado y validación mínima
+
+Crea useState para cada campo: nombre, fechaInicio, fechaFin, tipo, acompanantes (string vacío por defecto), destino (objeto {pais, ciudad} o null), fotoPortada (File | null).
+
+Habilita el botón "Guardar" sólo cuando los campos requeridos tengan valor: nombre, fechaInicio, fechaFin, tipo, y destino distinto de null.
+
+Implementa la función saveHandler que por ahora hace console.log({ ...}) y luego hace router.push("/").
+
+Recibir datos al volver de "Seleccionar Ciudad"
+
+En la ruta /seleccionar-ciudad, al dar "Confirmar" debes hacer router.back() pasando el parámetro seleccionado. Por ejemplo:
+
+ts
+Copiar
+Editar
+router.push({
+  pathname: '/crear-viaje',
+  query: { pais: selectedCountry, ciudad: selectedCity }
+});
+En crear-viaje.tsx, en useEffect detecta si router.query.pais y router.query.ciudad existen, y guarda en estado destino. Muestra debajo del botón "Seleccionar destino" el texto "Destino: {pais} – {ciudad}".
+
+3.3. Buscar Destinos (/src/pages/buscar-destinos.tsx)
+Maquetar AppBar con back arrow + input de búsqueda
+
+<AppBar leftButton={{ icon: ArrowLeft, onClick: () => router.back() }}> y dentro un <input> con placeholder "Buscar país…".
+
+Estilo: input full-width, fondo "neutrals" (#F5F5F5), bordes redondeados.
+
+Mostrar "Destinos populares" cuando input vacío
+
+Mantén un array estático con dos ejemplos: ["España","Italia"].
+
+Si searchTerm === "", renderiza un header <h2>Destinos populares</h2> y debajo un listado de <DestinationRow> con la bandera correspondiente (busca SVG estáticos en /public/icons).
+
+Cada <DestinationRow> hace onClick={() => { setCountry(row.name); router.push('/seleccionar-ciudad?pais='+row.name); }}.
+
+Filtrar lista de todos los países (mock)
+
+Crea un array con un par de países de prueba (por ejemplo 10 nombres).
+
+Cuando el usuario escriba algo, filtra countries.filter(c => c.toLowerCase().includes(searchTerm.toLowerCase())) y muestra la lista de <DestinationRow>.
+
+Para cada fila, la misma lógica: onClick pasa { pais } a la siguiente pantalla.
+
+Preparar hook useFetchDestinos (luego apuntará a /api/destinos)
+
+De momento devuelve la lista mock completa.
+
+3.4. Seleccionar Ciudad (/src/pages/seleccionar-ciudad.tsx)
+Maquetar AppBar y search input
+
+AppBar con back arrow y título dinámico (router.query.pais).
+
+Debajo, <input placeholder="Buscar ciudad…" /> con estilo similar al de países.
+
+Lista mock de ciudades
+
+Crea un objeto que mapea países a lista de ciudades de prueba (por ejemplo:
+
+js
+Copiar
+Editar
+{
+  Italia: ["Roma","Milán","Venecia","Florencia","Nápoles"],
+  España: ["Madrid","Barcelona","Sevilla","Valencia"]
+}
+Obtén const ciudades = ciudadesPorPais[paisSeleccionado] || [].
+
+Filtra según el searchTerm.
+
+Renderiza <DestinationRow> para cada ciudad (ícono de pin a la izquierda en lugar de bandera).
+
+Al click de una ciudad, márcala como seleccionada (cambia color de fondo o radio). Guarda en estado selectedCity.
+
+Botón "Confirmar" fijo en el bottom
+
+Coloca un <button className="fixed bottom-0 w-full p-4 bg-primary text-white">Confirmar</button>.
+
+Al hacer click, ejecuta algo como:
+
+ts
+Copiar
+Editar
+router.push({
+  pathname: '/crear-viaje',
+  query: { pais: paisSeleccionado, ciudad: selectedCity }
+});
+3.5. Detalle de Viaje (/src/pages/viajes/[id].tsx)
+Configurar getServerSideProps o getStaticProps mínimo (mock)
+
+Por ahora, usa getStaticPaths con fallback: true y getStaticProps que devuelve un objeto viaje de ejemplo (coincidente con la fase Home).
+
+Estrutura de viaje de ejemplo:
+
+js
+Copiar
+Editar
+{
+  id: 1,
+  nombre: "Vacaciones Italia 2025",
+  fechaInicio: "2025-06-15",
+  fechaFin: "2025-06-22",
+  tipo: "En pareja",
+  acompanante: "Laura",
+  destinoPais: "Italia",
+  destinoCiudad: "Roma",
+  lugares: [
+    {
+      id: 1,
+      nombre: "Coliseo",
+      tipo: "Monumento histórico",
+      fechaVisita: "2025-06-16",
+      imagen: "/images/coliseo.jpg"
+    }
+    // …otros lugares de ejemplo
+  ]
+}
+Maquetar AppBar con back + título + icono editar
+
+<AppBar leftButton={{ icon: ArrowLeft }} title="Vacaciones Italia 2025" rightButton={{ icon: PencilIcon, onClick: () => {/*pendiente*/} }} />
+
+Resumen horizontal (fecha, tipo, destino)
+
+Un contenedor <div className="flex bg-white rounded shadow p-4 my-4 space-x-4">
+
+Icono calendario + texto "15–22 Jun 2025"
+
+Icono personas + texto "En pareja con Laura"
+
+Icono globo + texto "Italia, Roma"
+
+Imagen de portada
+
+<img src="/images/vacaciones-italia-cover.jpg" className="w-full h-52 rounded" /> (reemplaza con placeholder si no tienes la imagen real).
+
+Pestañas "Lugares" / "Comentarios & Fotos" / "Mapa"
+
+Reutiliza <TabBar> pero con iconos:
+
+yaml
+Copiar
+Editar
+[
+  { label: "Lugares", icon: MapPinIcon },
+  { label: "Comentarios & Fotos", icon: ChatBubbleIcon },
+  { label: "Mapa", icon: MapIcon }
+]
+Mantén estado de pestaña activa.
+
+Por ahora, implementa sólo el contenido de "Lugares".
+
+Contenido de "Lugares"
+
+Itera sobre viaje.lugares (array de lugares) y renderiza <PlaceCard> para cada uno.
+
+Dentro de <PlaceCard>, muestra thumbnail imagen, nombre, tipo, fechaVisita.
+
+Posiciona en la esquina inferior derecha un <FloatingButton> color primario (#4A90E2) con icono "+" que haga router.push(/lugares/nuevo?v=${idViaje}).
+
+3.6. Agregar/Editar Lugar (/src/pages/lugares/nuevo.tsx)
+Detectar modo "Agregar" vs "Editar"
+
+Lee de router.query si hay un lugarId. Si existe, estás en modo edición; si no, modo nuevo.
+
+Ajusta el título del AppBar en consecuencia: {lugarId ? "Editar lugar" : "Nuevo lugar"}.
+
+Maquetar AppBar y formulario
+
+AppBar con back arrow y botón "Guardar" (deshabilitado inicialmente).
+
+Campos:
+
+Nombre del lugar: <FormInput label="Nombre del lugar" placeholder="Ej. Sagrada Familia" />
+
+Tipo de lugar: <select> estilizado con Tailwind; opciones "Monumento", "Restaurante", "Parque", "Museo", "Otro".
+
+Ubicación exacta:
+
+<FormInput label="Ubicación exacta" placeholder="Escribe la dirección" icon={MapPinIcon} />
+
+Botón "Seleccionar en mapa" junto a él (ícono de mapa + texto). Por ahora, al hacer clic, muestra un alert("En desarrollo").
+
+Fecha de visita: <DatePicker label="Fecha de visita" />.
+
+Carousel de fotos:
+
+Un contenedor horizontal con espacio para 3–4 thumbnails (placeholder vacíos).
+
+Un botón pequeño "+" que dispare el input type="file" accept="image/*" multiple.
+
+En fase inicial, sólo muestra el botón sin implementar subida.
+
+Comentarios / Notas: <textarea className="border rounded p-2" placeholder="Escribe tus impresiones aquí…" />.
+
+Validación mínima y estado
+
+Crea estados (useState) para cada campo.
+
+Habilita "Guardar" cuando nombre, tipo, ubicacion, y fechaVisita tengan valor.
+
+El handler saveHandler por ahora puede hacer console.log({ ... }) y luego router.back() para volver a detalle de viaje.
+
+3.7. Mapa Global (/src/pages/mapa-viajes.tsx)
+Maquetar AppBar con título y toggle "Globo / 2D"
+
+<AppBar title="Mapa de mis viajes" rightButton={{ text: "Globo / 2D", onClick: toggleView }} />.
+
+Mantén un estado booleano (is3D) para alternar entre vista 3D y 2D (puedes simplemente alternar texto, la implementación real de Mapbox 3D se deja para más adelante).
+
+Integrar componente MapGlobal
+
+En el cuerpo, renderiza <MapGlobal markers={mockMarkers} is3D={is3D} />.
+
+mockMarkers es un array de 3–4 objetos { lat, lng, estado }, con países de Europa (por ejemplo { lat: 41.9028, lng: 12.4964, estado: "Próximo" }).
+
+El componente dibuja los marcadores con colores: azul (planificado), verde (visitado), gris (finalizado).
+
+No es necesario el mapa real en esta fase inicial; si no quieres integrar Mapbox ahora, pon un placeholder <div className="w-full h-96 bg-gray-200 rounded">Mapa aquí</div>.
+
+Botones flotantes
+
+Filtro (funnel): $<FloatingButton> pequeño en top-left (usa absolute top-20 left-4), con icono de embudo; al presionarlo, muestra un modal o alert("Filtrar en desarrollo").
+
+Expandir (⤢): posicionado bottom-right por encima de todo (por ejemplo absolute bottom-4 right-4); al click, redirige a una ruta futura o muestra alert("Ver en pantalla completa").
+
+3.8. Perfil / Configuración (/src/pages/perfil.tsx)
+Maquetar AppBar y sección de perfil
+
+<AppBar title="Mi perfil" />.
+
+Debajo, un contenedor centrado con:
+
+<img src="/images/avatar-placeholder.png" className="w-20 h-20 rounded-full" />
+
+<h2 className="mt-2 font-semibold">Juan Pérez</h2>
+
+<p className="text-sm text-gray-600">juan@email.com</p>
+
+Un <button className="text-primary text-sm mt-1">Editar perfil</button>.
+
+Sección "Mis grupos de viaje"
+
+Título <h3 className="mt-6 font-medium">Mis grupos de viaje</h3>.
+
+Lista vertical de dos items mock:
+
+<div className="flex items-center justify-between p-4 bg-white rounded shadow my-2">
+
+<div className="flex items-center space-x-2">
+
+Icono personas + <span>Familia</span>
+
+<span className="text-sm text-gray-500">3 miembros</span>
+
+En toda la fila, onClick podría llevar a una pantalla "detalle de grupo" (en futuro).
+
+Otra fila idéntica para "Amigos".
+
+FloatingButton en bottom-right de esta sección (relativo): <FloatingButton onClick={() => alert("Crear grupo")} />.
+
+Sección "Estadísticas"
+
+Dos tarjetas horizontales o verticales:
+
+"Viajes realizados: 12"
+
+"Ciudades visitadas: 45"
+
+Usa <div className="bg-white rounded shadow p-4 m-1 flex-1"> para cada una, animaciones ligeras si quieres (Framer Motion) o simplemente estáticas.
+
+Sección "Configuración"
+
+Lista de items con espacio entre ellos (divide-y divide-gray-200):
+
+<div className="flex items-center justify-between p-4">
+
+<span>Notificaciones</span>
+
+<input type="checkbox" /> (toggle switch estilizado con Tailwind).
+
+<div className="flex items-center justify-between p-4 cursor-pointer">
+
+<span>Idioma</span>
+
+<span>Español</span> + chevron.
+
+<div className="flex items-center justify-between p-4 cursor-pointer">
+
+<span>Privacidad</span> + chevron.
+
+<div className="flex items-center justify-between p-4 cursor-pointer">
+
+<span>Ayuda y soporte</span> + chevron.
+
+<div className="flex items-center justify-center p-4 cursor-pointer text-red-600">Cerrar sesión</div>.
+
+Lógica mínima
+
+Agrega useSession() para mostrar nombre/email dinámico (en cuanto exista usuario real).
+
+Botón "Cerrar sesión" ejecuta signOut() de NextAuth.
+
+4. Conectar frontend y backend (fase inicial de integración)
+Crear rutas API CRUD para viajes, destinos y lugares
+
+En /src/pages/api/viajes.ts:
+
+GET /api/viajes: devuelve lista de viajes del usuario logueado.
+
+POST /api/viajes: crea nuevo viaje con datos enviados.
+
+PUT /api/viajes/:id: actualiza viaje.
+
+DELETE /api/viajes/:id: elimina viaje.
+
+En /src/pages/api/destinos.ts:
+
+GET /api/destinos: devuelve lista de países y/o ciudades (puedes precargar datos mock o consumir una API externa en el futuro).
+
+En /src/pages/api/lugares.ts:
+
+Rutas similares para CRUD de lugares.
+
+Ajustar hooks de React Query
+
+Instala react-query y @tanstack/react-query.
+
+Crea hooks:
+
+useFetchViajes: llama a GET /api/viajes.
+
+useCreateViaje: POST /api/viajes.
+
+useFetchDestinos: GET /api/destinos.
+
+useFetchLugares(viajeId): GET /api/lugares?viajeId=….
+
+useCreateLugar, useUpdateLugar.
+
+Envuelve tu app en QueryClientProvider en _app.tsx.
+
+Actualizar pantallas para usar datos reales
+
+En Home: usa useFetchViajes para reemplazar el array mock.
+
+En Crear Nuevo Viaje: al guardar, invoca useCreateViaje para enviar al backend y luego invalidar el query de viajes.
+
+En Detalle: en getServerSideProps, puedes prefetch de viajes/[id] con getSession para autenticar al usuario. O bien, usa useFetchViaje(id) en el cliente.
+
+En Agregar Lugar: usa useCreateLugar con viajeId del query.
+
+5. Refinamientos y detalles gráficos
+Ajustar paleta de colores y tipografía
+
+Revisa que todos los componentes usen la paleta definida en tailwind.config.js.
+
+Ajusta los tamaños de fuente:
+
+Títulos (xl o 2xl), subtítulos (lg), texto normal (base).
+
+Margenes y paddings consistentes (p-4, m-4, etc.).
+
+Agregar íconos lineales (24×24 px)
+
+Instala react-icons o @heroicons/react.
+
+Reemplaza cada placeholder de icono por <HiOutlineCalendar />, <HiOutlineLocationMarker />, <HiOutlineUserGroup />, etc., según corresponda.
+
+Implementar sombras y bordes redondeados
+
+Asegúrate de que todas las tarjetas (bg-white, rounded-lg o rounded-xl, shadow-sm o shadow-md) tengan coherencia.
+
+En botones, usa rounded-2xl para esquinas más suaves.
+
+Animaciones ligeras (opcional)
+
+Si deseas, añade Framer Motion para transiciones entre pestañas (AnimatePresence) o para animar la entrada de tarjetas (motion.div initial… animate…).
+
+No es obligatorio en la primera versión si prefieres concentrarte en la funcionalidad.
+
+Diseño responsivo (móvil/portrait)
+
+Verifica que en pantallas pequeñas (hasta 375px de ancho) todo se vea correctamente.
+
+Usa utilidades de Tailwind como sm:, md: si quieres ajustar márgenes en pantallas más anchas. Sin embargo, la prioridad es móvil en modo retrato.
+
+6. Tareas adicionales y lanzamientos futuros
+Subida y visualización de imágenes
+
+Investigar e integrar un servicio (Cloudinary, Supabase Storage, Amazon S3) para guardar fotos de lugares y portada de viaje.
+
+En el formulario de "Agregar Lugar", permitir múltiples imágenes.
+
+Mostrar carrusel real de imágenes en lugar de placeholder.
+
+Autorización y roles (opcional)
+
+Si en el futuro quieres permitir que varios usuarios compartan un viaje, extiende el modelo Viaje para incluir una tabla intermedia ViajeUsuarios (muchos a muchos).
+
+Ajusta NextAuth para soportar roles (ej. admin, colaborador).
+
+Mapa con marcadores reales
+
+Obtener claves de Mapbox y configurar tu cuenta.
+
+Reemplazar el placeholder de /src/components/MapGlobal.tsx por un componente funcional que cargue el mapa y muestre marcadores interactivos.
+
+Añadir clustering si hay muchos marcadores.
+
+Comentarios & Fotos en detalle de viaje
+
+Crear modelo Comentario en Prisma (texto, autor, fecha, optional enlace a foto).
+
+Implementar UI de pestaña "Comentarios & Fotos": lista de comentarios (texto + fecha + foto).
+
+Permitir agregar comentario y foto.
+
+Notificaciones / Sincronización en tiempo real
+
+En etapas avanzadas, usar WebSockets o Supabase Realtime para notificar a usuarios cuando alguien agrega un lugar al viaje compartido.
+
+Enfocarse luego en optimizar performance y pruebas E2E.
+
+Resumen general de prioridades inmediatas
+Preparación de repositorio + Next.js + Tailwind + Supabase + NextAuth
+
+Creación de componentes reutilizables (AppBar, TabBar, TripCard, etc.)
+
+Maquetación y lógica básica de las 8 pantallas en modo "mock" (sin conexión real a API)
+
+Implementar rutas API básicas y conectar con React Query para datos reales
+
+Pulir estilos, íconos y navegación entre pantallas (links, router.push, query params)
+
+Con esta lista de tareas bien divididas, podrás avanzar poco a poco: primero estabilizas el entorno completo, luego montas las vistas estáticas, y por último conectas todo con la lógica de base de datos y autenticación. ¡Adelante con el primer paso!

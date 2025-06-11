@@ -1,0 +1,192 @@
+Frontend y Backend (todo en uno):
+Next.js + TypeScript + Tailwind CSS + Supabase
+
+Next.js
+
+Te permite construir una PWA móvil/SPA con React y TypeScript, a la vez que expone API Routes para cualquier lógica de backend sencilla.
+
+Ofrece SSR/SSG si en algún punto quieres prerenderizar rutas (por ejemplo, la lista de destinos o detalles públicos).
+
+Tailwind CSS
+
+Clases utilitarias para aplicar rápidamente estilos (colores, bordes redondeados, sombras, tamaños responsivos) según los requisitos de diseño.
+
+Configuras tu paleta (primary #4A90E2, accent #FF6F61, neutrals) dentro de tailwind.config.js y lo usas en todos los componentes.
+
+Supabase
+
+Plataforma Backend-as-a-Service que proporciona:
+- Base de datos PostgreSQL gestionada
+- Autenticación de usuarios lista para usar
+- Almacenamiento de archivos para fotos
+- Row Level Security para compartir viajes
+- API REST y en tiempo real
+- Panel de administración intuitivo
+
+Estructura de datos en Supabase:
+
+```sql
+-- Tabla de usuarios (manejada por Supabase Auth)
+users (
+  id uuid references auth.users,
+  email text,
+  name text,
+  avatar_url text
+)
+
+-- Tabla de viajes
+trips (
+  id uuid default uuid_generate_v4(),
+  name text,
+  start_date date,
+  end_date date,
+  type text check (type in ('solo', 'pareja', 'grupo')),
+  country text,
+  city text,
+  created_by uuid references users(id),
+  cover_image_url text,
+  created_at timestamp with time zone default now()
+)
+
+-- Tabla para compartir viajes
+trip_members (
+  trip_id uuid references trips(id),
+  user_id uuid references users(id),
+  role text check (role in ('owner', 'member')),
+  primary key (trip_id, user_id)
+)
+
+-- Tabla de lugares
+places (
+  id uuid default uuid_generate_v4(),
+  trip_id uuid references trips(id),
+  name text,
+  type text check (type in ('Monumento', 'Restaurante', 'Parque', 'Museo', 'Otro')),
+  location text,
+  visit_date date,
+  notes text,
+  photos_urls text[],
+  created_at timestamp with time zone default now()
+)
+```
+
+Autenticación / Login
+Supabase Auth:
+
+- Proporciona autenticación lista para usar (email/password)
+- Maneja sesiones y tokens JWT automáticamente
+- Incluye UI de login/registro si lo necesitas
+- Permite autenticación social (Google, GitHub) si lo quieres añadir
+
+Flujo básico de login en Next.js
+
+/login: página con formulario <input type="email">, <input type="password"> y botón "Iniciar sesión".
+
+Supabase maneja la autenticación y crea la sesión.
+
+Una vez autenticado, Next.js redirige a /, donde se verifica la sesión con useSession() y se carga la lista de viajes.
+
+Arquetipo de carpetas (simplificado)
+/frontend
+  /public
+    /icons       ← iconos SVG (map-pin, calendario, personas, etc.)
+    /images      ← imágenes de ejemplo (cover, thumbnails…)
+
+  /src
+    /components
+      AppBar.tsx           ← Componentes reutilizables (header con título+botones)
+      TabBar.tsx           ← Tabs horizontales ("Próximos", "Activos", "Finalizados")
+      TripCard.tsx         ← Tarjeta de viaje en Home
+      FloatingButton.tsx    ← Botón circular "+"
+      FormInput.tsx        ← Input genérico con icono (calendario, flag, etc.)
+      DatePicker.tsx       ← Campo de fecha con ícono
+      RadioGroup.tsx       ← Selector "Solo/En pareja/En grupo"
+      DestinationRow.tsx    ← Fila de país/ciudad en listas
+      PlaceCard.tsx        ← Tarjeta de lugar en "Lugares"
+      MapGlobal.tsx        ← Wrapper de Mapbox GL JS o React-Leaflet
+      BottomNav.tsx        ← Navegación inferior (Home, Destinos, Mapa, Perfil)
+      ...
+    /pages
+      _app.tsx             ← Layout global (ThemeProvider, SessionProvider, Tailwind base)
+      index.tsx            ← **Home Screen** (tabs + lista de cards)
+      crear-viaje.tsx      ← **Crear Nuevo Viaje** (formulario vertical) 
+      buscar-destinos.tsx   ← **Buscar Destinos** (barra de búsqueda + lista países)
+      seleccionar-ciudad.tsx ← **Seleccionar Ciudad** (lista desplazable + botón confirmar)
+      viajes/[id].tsx       ← **Detalle de Viaje** (tabs "Lugares" / "Comentarios & Fotos" / "Mapa")
+      lugares/nuevo.tsx     ← **Agregar/Editar Lugar** (formulario con dropdown y mapa)
+      mapa-viajes.tsx       ← **Mapa Global** (mapa con marcadores y filtro)
+      perfil.tsx            ← **Perfil / Configuración** (avatar, grupos, estadísticas, ajustes)
+    /lib
+      supabase.ts          ← Cliente de Supabase
+      auth.ts              ← Utils de sesión (useSession, getSession)
+      mapbox.ts            ← Configuración de Mapbox API (token, estilo, etc.)
+      helpers.ts           ← Funciones auxiliares (formatear fechas, etc.)
+    /hooks
+      useTrips.ts          ← Hook para obtener/crear/actualizar viajes
+      usePlaces.ts         ← Hook para lugares de interés
+      useAuth.ts           ← Hook para autenticación
+      ...
+  next.config.js        ← Config para Next.js (PWA, imagenes domains, rewrites)
+  tsconfig.json         ← Config TypeScript
+  package.json          ← Dependencias: react, next, @supabase/supabase-js, tailwindcss, etc.
+
+¿Por qué este stack es el "más adecuado"?
+Coherencia con tu experiencia
+
+Ya manejas React + TypeScript a nivel avanzado. Next.js es esencialmente React + convenciones para rutas y server‐side, por lo que la curva de aprendizaje es mínima.
+
+Te evitas "context switching" entre diferentes tecnologías, ya que todo lo sirves desde Next.js.
+
+Autenticación lista para usar
+
+Supabase Auth se integra perfectamente con Next.js. No tienes que reinventar un sistema JWT desde cero. Además, te da callbacks para roles, sesiones e incluso proveedores externos (Google, GitHub) si en un futuro amplías.
+
+Estilos rápidos y mantenibles
+
+Tailwind te permite replicar exactamente los diseños (pill badges, cards con sombra, botones circulares, inputs con iconos) sin escribir CSS a mano. Además, el diseño responsivo móvil es automático (p.ej. sm:, md:).
+
+Supabase para datos y archivos
+
+El modelado de usuarios, viajes, destinos, grupos y estadísticas queda tipado en TS, y manejas permisos fácilmente con RLS.
+
+Supabase Storage maneja las fotos de manera eficiente y segura.
+
+Mapas y datos en tiempo real
+
+Con Mapbox GL JS o React-Leaflet, pintas marcadores coloreados con un par de líneas y gestionas zoom y fullscreen.
+
+Si más adelante quieres notificaciones en tiempo real (por ejemplo, un lugar agregado aparece en todos los clientes sin recargar), puedes usar Supabase Realtime sin cambiar drásticamente tu frontend.
+
+Ecosistema unificado y eficiente
+
+No necesitas desplegar y mantener un servidor separado. Basta con Vercel para frontend y Supabase para backend.
+
+CI/CD es casi "cero configuración" con GitHub Actions + Vercel: cada push a main despliega tu Next.js en segundos.
+
+¿Y tu sistema de login?
+Supabase Auth:
+
+El usuario se registra con un formulario (/registrarse), Supabase almacena el usuario y crea la sesión.
+
+Para iniciar sesión usa la misma ruta (/login), Supabase maneja la autenticación y crea la cookie de sesión.
+
+Con el hook useSession() y la función getSession(), limitas el acceso a rutas privadas (p.ej. /viajes/*) y rediriges al login si no hay sesión.
+
+Resumen final del stack:
+Frontend & Auth:
+Next.js + TypeScript
+Tailwind CSS
+Supabase (Auth, Database, Storage)
+
+UI Components / Funcionalidades extras:
+react-query (fetch y caché de datos)
+Mapbox GL JS (mapas interactivos)
+Heroicons / react-icons (iconos lineales 24×24)
+Formik + Yup (formularios validados)
+
+Con este stack tienes:
+
+Una base de código limpia y mantenible.
+Autenticación integrada y segura (Supabase Auth).
+Desarrollo rápido de interfaces móviles con Tailwind y React.
+Capacidad de escalar (añadir más servicios o funcionalidades) sin reescribir toda la app.

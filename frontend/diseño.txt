@@ -1,0 +1,95 @@
+Create a mobile travel app prototype with the following features and screens (portrait orientation only):
+
+1. Home Screen:
+   - App Bar with title "Mis viajes" centered.
+   - Below the App Bar, three horizontal tabs labeled “Próximos”, “Activos” and “Finalizados”.
+   - In the “Próximos” tab: show a sample card with rounded corners, white background, drop shadow. Inside the card: 
+     • Trip name (e.g. "Vacaciones Italia 2025") at top left
+     • Dates underneath (e.g. “15 Jun – 22 Jun 2025”)
+     • A blue pill-shaped badge on the right that says “Próximo”
+   - Add a circular Floating Action Button (“+”) in orange (bottom right) for “Crear viaje”.
+
+2. “Crear Nuevo Viaje” Screen:
+   - App Bar with title “Nuevo viaje” and two text buttons: “Cancelar” on the left and “Guardar” (disabled initially) on the right.
+   - Below, a vertical form:
+     • Text input labeled “Nombre del viaje” with placeholder “Ej. Vacaciones en París 2025”.
+     • Two date fields side by side: “Fecha de inicio” and “Fecha de fin”, each with a calendar icon.
+     • A radio-style selector labeled “Tipo de viaje” with three options: “Viaje solo”, “En pareja”, “En grupo”. If “En pareja” or “En grupo” is selected, reveal a small text field “Agregar acompañantes” debajo.
+     • A button labeled “Seleccionar destino” with a small flag icon on the left.
+     • An optional photo placeholder: a dashed-border rectangle with camera icon, labeled “Foto de portada (opcional)”.
+   - At the bottom, a fixed “Guardar” button (gray/disabled until required fields are filled).
+
+3. “Buscar Destinos” Screen:
+   - App Bar with a back arrow and a search input field that says “Buscar país…”.
+   - Below, a vertical list of country rows (each row with a small flag icon, country name, and chevron icon).
+   - If no search query, show a header “Destinos populares” with two example countries (e.g. “España”, “Italia”).
+
+4. “Seleccionar Ciudad” Screen:
+   - App Bar with back arrow and the selected country name (for example, “Italia”).
+   - Under the App Bar, a search input “Buscar ciudad…”.
+   - A scrollable list of cities (each row shows city name and a small location pin icon).
+   - A fixed bottom area with a “Confirmar” button stretched full-width.
+
+5. “Detalle de Viaje” Screen:
+   - App Bar with back arrow, title “Vacaciones Italia 2025” and an edit (pencil) icon on the right.
+   - Under that, a horizontal summary card containing:
+     • Calendar icon + text “15–22 Jun 2025”
+     • People icon + text “En pareja con Laura”
+     • Globe icon + text “Italia, Roma”
+   - A large cover image below (full width, height approx. 200 px, rounded corners).
+   - Below the cover image, three tabs with icons and labels: “Lugares” (map-pin icon), “Comentarios & Fotos” (chat/bubble + camera icon), “Mapa” (map icon).
+   - The “Lugares” tab content: vertical list of place cards (each card has a small thumbnail image, place name e.g. “Coliseo”, subtitle “Monumento histórico”, and date “16 Jun 2025”).
+   - In the bottom right corner of this screen, a circular “+” button (primary color) to “Agregar lugar”.
+
+6. “Agregar/Editar Lugar de Interés” Screen:
+   - App Bar with back arrow, title “Nuevo lugar” (or “Editar lugar”), and a “Guardar” button on the right (disabled until required fields are filled).
+   - Vertical form fields:
+     • Text input “Nombre del lugar” with placeholder “Ej. Sagrada Familia”.
+     • Dropdown labeled “Tipo de lugar” with options “Monumento”, “Restaurante”, “Parque”, “Museo”, “Otro”.
+     • Text input “Ubicación exacta” with a small map-pin icon and a button to “Seleccionar en mapa”.
+     • Date picker “Fecha de visita” (calendar icon + text).
+     • A horizontal photo carousel placeholder: empty thumbnails plus a “+ Foto” button.
+     • Textarea “Comentarios / Notas” con placeholder “Escribe tus impresiones aquí…”.
+   - Bottom fixed “Guardar” button in blue.
+
+7. “Mapa Global” Screen:
+   - App Bar with title “Mapa de mis viajes” and a toggle button on the right labeled “Globo / 2D” to switch views.
+   - Main content: a world map graphic with colored markers (blue for planned, green for visited, grey for finalizados). Show at least three sample markers over Europa.
+   - A filter icon (funnel) button at top left as a floating button.
+   - At bottom right, a small “Expandir” (⤢) icon to “Ver en pantalla completa”.
+
+8. “Perfil / Configuración” Screen:
+   - App Bar with title “Mi perfil”.
+   - Top section: a circular avatar (80 px), name “Juan Pérez”, email “juan@email.com”, and a small “Editar perfil” link below.
+   - Section “Mis grupos de viaje”: vertical list with two sample groups: 
+       • “Familia” (people icon, “3 miembros”).
+       • “Amigos” (people icon, “4 miembros”).
+     A floating “+” button for “Nuevo grupo” in bottom right.
+   - Section “Estadísticas”: 
+       • Card 1: “Viajes realizados: 12”
+       • Card 2: “Ciudades visitadas: 45”
+   - Section “Configuración”: a list of options:
+       • “Notificaciones” (toggle switch on/off)
+       • “Idioma” (text “Español” + chevron)
+       • “Privacidad” (chevron)
+       • “Ayuda y soporte” (chevron)
+       • “Cerrar sesión” (text in red)
+   - Use a clean, modern color scheme: white backgrounds, primary color #4A90E2, accent #FF6F61 for buttons.
+
+General style notes:
+• Use a sans-serif font (e.g. Roboto or Inter).
+• Rounded corners (12 px) on cards and buttons.
+• Light drop shadows under cards.
+• Icons lineales (24×24 px).
+• Color palette: primary #4A90E2 (azul), secondary #FF6F61 (rojo suave), neutrals (gris claro #F5F5F5 de fondo, texto oscuro #333333).
+
+The prototype should include navigation links between screens: 
+- “+” on Home goes to “Crear Nuevo Viaje”
+- In “Crear Nuevo Viaje”, “Seleccionar destino” goes to “Buscar Destinos”, then “Buscar Destinos” → a country → “Seleccionar Ciudad” → confirm returns to “Crear Nuevo Viaje”
+- “Guardar” in “Crear Nuevo Viaje” returns to Home with the new card visible in the “Próximos” tab
+- Tapping a trip card in “Home” goes to “Detalle de Viaje”
+- “+” in “Detalle de Viaje (Lugares)” goes to “Agregar Lugar”
+- “Mapa” tab in “Detalle de Viaje” does not link elsewhere
+- Bottom navigation: Home, Buscar Destinos, Mapa Global, Perfil
+
+Please generate a fully fleshed out, cohesive mobile UI prototype with these eight screens and navigation between them.

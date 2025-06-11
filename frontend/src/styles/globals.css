@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilo global para evitar overflow en pantallas móviles */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #F5F5F5; /* Neutral */
+  color: #333333; /* Texto oscuro */
+  overflow-x: hidden;
+}
+
+/* Clase para contenedores principales */
+.container {
+  @apply max-w-xl mx-auto px-4 py-6;
+}
