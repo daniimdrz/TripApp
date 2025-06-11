@@ -18,10 +18,25 @@ interface TripDetail {
   }[];
 }
 
+interface TripInfo {
+  id: string;
+  name: string;
+  country: string;
+  city: string;
+  start_date: string | null;
+  end_date: string | null;
+  type: string;
+  cover_image_url: string | null;
+  status: string;
+  created_by: string;
+  created_at: string;
+}
+
 export default function TripDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const [trip, setTrip] = useState<any>(null);
+  const [trip, setTrip] = useState<TripInfo | null>(null);
+  console.log(trip);
   const [tripDetails, setTripDetails] = useState<TripDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -12,7 +12,7 @@ export async function searchCityImage(query: string): Promise<string | null> {
       orientation: 'landscape',
     });
 
-    if (result.response?.results.length > 0) {
+    if (result.response?.results?.length > 0) {
       return result.response.results[0].urls.regular;
     }
 
