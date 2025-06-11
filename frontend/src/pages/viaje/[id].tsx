@@ -6,6 +6,7 @@ import { useAuthContext } from '../../contexts/AuthContexts';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import AddTripDetailModal from '../../components/AddTripDetailModal';
 import SwipeableDetail from '../../components/SwipeableDetail';
+import SideMenu from '../../components/SideMenu';
 
 interface TripDetail {
   id: string;
@@ -52,6 +53,7 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
   const fetchTripAndDetails = useCallback(async () => {
     try {
@@ -82,7 +84,7 @@ export default function TripDetailPage() {
           )
         `)
         .eq('trip_id', id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (detailsError) throw detailsError;
 
@@ -170,25 +172,19 @@ export default function TripDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppBar title={trip.name || "Detalle del Viaje"} />
+      <AppBar title={trip.name || "Detalle del Viaje"} 
+      onMenuOpen={() => setIsSideMenuOpen(true)}/>
       <div className="container mx-auto px-4 py-8">
-        {/* Trip Header */}
-        <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{trip.name}</h1>
-          <p className="text-gray-600">{trip.city}, {trip.country}</p>
-        </div>
-
         {/* Sección de Detalles */}
-        <section className="py-12">
+        <section className="pt-4 pb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Detalles del Viaje</h2>
+            <div className="mb-6 text-center">
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="inline-flex items-center w-full justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 <PlusIcon className="h-5 w-5 mr-2" />
-                Añadir Detalle
+                Añadir Sección
               </button>
             </div>
 
@@ -207,6 +203,11 @@ export default function TripDetailPage() {
           </div>
         </section>
       </div>
+
+      <SideMenu 
+        isOpen={isSideMenuOpen}
+        onClose={() => setIsSideMenuOpen(false)}
+      />
 
       {/* Add Detail Modal */}
       <AddTripDetailModal

@@ -1,7 +1,7 @@
 // /src/components/TripCard.tsx
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { PencilIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, UsersIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 
 export default function TripCard({ 
@@ -13,7 +13,8 @@ export default function TripCard({
     city,
     cover_image_url,
     status,
-    onEdit
+    onEdit,
+    type
   }: { 
     id: string;
     name: string; 
@@ -24,6 +25,7 @@ export default function TripCard({
     cover_image_url?: string | null;
     status: string;
     onEdit: (tripId: string) => void;
+    type: string;
   }) {
     const router = useRouter();
 
@@ -72,12 +74,17 @@ export default function TripCard({
         )}
         <div className="p-4">
           <div className="flex justify-between items-start">
-            <div>
-              <h2 className="font-semibold text-neutral-dark">{name}</h2>
-              <p className="text-sm text-gray-500">{getDateDisplay()}</p>
+            <div className="flex flex-col h-full justify-between">
+              <div>
+                <h2 className="font-semibold text-neutral-dark">{name}</h2>
+                <p className="text-sm text-gray-500">{getDateDisplay()}</p>
+              </div>
               <p className="text-sm text-gray-600 mt-1">{city}, {country}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
+              {type === 'En pareja' && (
+                <UsersIcon className="h-5 w-5 text-gray-500" title="Viaje en pareja" />
+              )}
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${badgeColor[status as keyof typeof badgeColor]}`}>
                 {status}
               </span>

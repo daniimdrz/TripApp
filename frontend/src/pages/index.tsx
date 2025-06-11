@@ -326,19 +326,19 @@ export default function Home({ onNotificationsOpen, notificationCount }: { onNot
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {getFilteredTrips().map((trip) => (
-              <div key={trip.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <TripCard 
-                  id={trip.id}
-                  name={trip.name}
-                  start_date={trip.start_date}
-                  end_date={trip.end_date}
-                  country={trip.country}
-                  city={trip.city}
-                  cover_image_url={trip.cover_image_url}
-                  status={trip.status}
-                  onEdit={() => handleEditClick(trip.id)}
-                />
-              </div>
+              <TripCard 
+                key={trip.id}
+                id={trip.id}
+                name={trip.name}
+                start_date={trip.start_date}
+                end_date={trip.end_date}
+                country={trip.country}
+                city={trip.city}
+                cover_image_url={trip.cover_image_url}
+                status={trip.status}
+                type={trip.type}
+                onEdit={() => handleEditClick(trip.id)}
+              />
             ))}
           </div>
         )}

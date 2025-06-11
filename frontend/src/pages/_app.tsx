@@ -79,6 +79,7 @@ function AppContent({ Component, pageProps }: AppProps) {
           console.log('Cerrando panel de notificaciones');
           setIsNotificationsOpen(false);
         }}
+        onNotificationRead={fetchNotificationCount}
       />
     </AuthProvider>
   );

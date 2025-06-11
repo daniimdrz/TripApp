@@ -277,6 +277,7 @@ export default function MisViajes({ onNotificationsOpen, notificationCount }: { 
                 city={trip.city}
                 cover_image_url={trip.cover_image_url}
                 status={trip.status}
+                type={trip.type}
                 onEdit={() => handleEditClick(trip.id)}
               />
             ))}

@@ -25,14 +25,14 @@ interface Notification {
 interface NotificationsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onNotificationRead: () => void;
 }
 
-export default function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
+export default function NotificationsPanel({ isOpen, onClose, onNotificationRead }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthContext();
-  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -57,9 +57,7 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
       console.log('Notificaciones encontradas:', data);
       setNotifications(data || []);
       
-      // Actualizar contador de no leídas
-      const unread = data?.filter((n: Notification) => !n.read).length || 0;
-      setUnreadCount(unread);
+      // No es necesario actualizar unreadCount localmente, se calculará al renderizar
     } catch (error) {
       console.error('Error al cargar notificaciones:', error);
     }
@@ -86,27 +84,17 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
         )
       );
 
-      // Actualizar contador de no leídas
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      // Notificar al componente padre para que actualice el contador global
+      onNotificationRead();
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
     }
   };
 
-  return (
-    <div className="relative">
-      <button
-        onClick={onClose}
-        className="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-      >
-        <BellIcon className="h-6 w-6" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
-      </button>
+  const unreadCount = notifications.filter(n => !n.read).length;
 
+  return (
+    <>
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
           <div className="w-full max-w-md bg-white h-full shadow-xl">
@@ -156,6 +144,6 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 } 

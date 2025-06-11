@@ -6,6 +6,7 @@ import AppBar from '../components/AppBar';
 import SideMenu from '../components/SideMenu';
 import { useRouter } from 'next/router';
 import { useAuthContext } from '../contexts/AuthContexts';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 interface User {
   id: string;
@@ -35,6 +36,8 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
   const [sendingRequest, setSendingRequest] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
+  const [isDeleteFriendDialogOpen, setIsDeleteFriendDialogOpen] = useState(false);
+  const [friendToDelete, setFriendToDelete] = useState<User | null>(null);
 
   const fetchFriends = async () => {
     try {
@@ -207,6 +210,36 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
     }
   };
 
+  const handleDeleteFriend = async () => {
+    if (!friendToDelete || !user) return;
+
+    try {
+      // Eliminar las dos entradas de la amistad (bidireccional)
+      const { error: deleteError1 } = await supabase
+        .from('friendships')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('friend_id', friendToDelete.id);
+      
+      if (deleteError1) throw deleteError1;
+
+      const { error: deleteError2 } = await supabase
+        .from('friendships')
+        .delete()
+        .eq('user_id', friendToDelete.id)
+        .eq('friend_id', user.id);
+      
+      if (deleteError2) throw deleteError2;
+
+      setFriends(prevFriends => prevFriends.filter(f => f.id !== friendToDelete.id));
+      setIsDeleteFriendDialogOpen(false);
+      setFriendToDelete(null);
+    } catch (error) {
+      console.error('Error al eliminar amigo:', error);
+      alert('Error al eliminar amigo.');
+    }
+  };
+
   useEffect(() => {
     fetchFriends();
     fetchPendingRequests();
@@ -362,6 +395,16 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
                   <h3 className="font-medium">{friend.name || friend.email}</h3>
                   <p className="text-sm text-gray-500">{friend.email}</p>
                 </div>
+                <button
+                  onClick={() => {
+                    setFriendToDelete(friend);
+                    setIsDeleteFriendDialogOpen(true);
+                  }}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-full"
+                  title="Eliminar amigo"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
               </div>
             ))}
           </div>
@@ -427,6 +470,16 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
       <SideMenu 
         isOpen={isSideMenuOpen}
         onClose={() => setIsSideMenuOpen(false)}
+      />
+      <ConfirmDialog
+        isOpen={isDeleteFriendDialogOpen}
+        onClose={() => {
+          setIsDeleteFriendDialogOpen(false);
+          setFriendToDelete(null);
+        }}
+        onConfirm={handleDeleteFriend}
+        title="Eliminar amigo"
+        message={`¿Estás seguro de que quieres eliminar a ${friendToDelete?.name || friendToDelete?.email} de tus amigos? Esta acción no se puede deshacer.`}
       />
     </div>
   );

@@ -96,15 +96,26 @@ export default function SwipeableDetail({ id, title, description, photos, onDele
         <h2 className="text-xl font-semibold text-gray-900 mb-2">{title}</h2>
         <p className="text-gray-600 mb-4">{description}</p>
         {photos && photos.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {photos.map((photo) => (
+          <div className="mt-4">
+            {photos.length === 1 ? (
               <img
-                key={photo.id}
-                src={photo.photo_url}
+                key={photos[0].id}
+                src={photos[0].photo_url}
                 alt={title}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full rounded-lg"
               />
-            ))}
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {photos.map((photo) => (
+                  <img
+                    key={photo.id}
+                    src={photo.photo_url}
+                    alt={title}
+                    className="w-full rounded-lg"
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

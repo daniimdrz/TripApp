@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../lib/supabase';
 
 interface PhotoUploaderProps {
@@ -70,11 +71,8 @@ export default function PhotoUploader({ onPhotosUploaded, tripDetailId }: PhotoU
           className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
         >
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            <PhotoIcon className="w-8 h-8 mb-2 text-gray-500" />
-            <p className="mb-2 text-sm text-gray-500">
-              <span className="font-semibold">Haz clic para subir</span> o arrastra y suelta
-            </p>
-            <p className="text-xs text-gray-500">PNG, JPG o JPEG</p>
+            <PlusIcon className="w-8 h-8 mb-2 text-gray-500" />
+            <p className="text-sm text-gray-500 font-semibold">Añadir Foto</p>
           </div>
           <input
             id="photo-upload"
@@ -95,22 +93,33 @@ export default function PhotoUploader({ onPhotosUploaded, tripDetailId }: PhotoU
       )}
 
       {previewUrls.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {previewUrls.map((url, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={url}
-                alt={`Preview ${index + 1}`}
-                className="w-full h-48 object-cover rounded-lg"
-              />
-              <button
-                onClick={() => removePhoto(index)}
-                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <XMarkIcon className="w-4 h-4" />
-              </button>
+        <div className="mt-4">
+          {previewUrls.length === 1 ? (
+            <img
+              key={previewUrls[0]}
+              src={previewUrls[0]}
+              alt="Preview 1"
+              className="w-full rounded-lg"
+            />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {previewUrls.map((url, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={url}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full rounded-lg"
+                  />
+                  <button
+                    onClick={() => removePhoto(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
