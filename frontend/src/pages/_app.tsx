@@ -8,6 +8,8 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
 import Layout from '../components/Layout';
+import Head from 'next/head';
+import FloatingButton from '../components/FloatingButton';
 
 // Rutas públicas que no requieren autenticación
 const publicRoutes = ['/login', '/register'];
@@ -82,6 +84,9 @@ function AppContent({ Component, pageProps }: AppProps) {
         }}
         onNotificationRead={fetchNotificationCount}
       />
+      {router.pathname === '/' && (
+        <FloatingButton onClick={() => router.push('/crear-viaje')} />
+      )}
     </ProtectedRoute>
   );
 }
@@ -89,6 +94,9 @@ function AppContent({ Component, pageProps }: AppProps) {
 export default function App(props: AppProps) {
   return (
     <AuthProvider>
+      <Head>
+        <link href="https://fonts.googleapis.com/css2?family=Birthstone&display=swap" rel="stylesheet" />
+      </Head>
       <Layout>
         <AppContent {...props} />
       </Layout>

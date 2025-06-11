@@ -50,7 +50,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <AppBar title="Registro" />
+      <AppBar />
       
       <div className="max-w-md mx-auto p-6">
         <form onSubmit={handleSubmit} className="space-y-6">

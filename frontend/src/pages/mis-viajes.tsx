@@ -239,9 +239,8 @@ export default function MisViajes({ onNotificationsOpen, notificationCount }: { 
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20">
+    <div className="min-h-screen bg-neutral-50 pb-20 page-enter-animation">
       <AppBar 
-        title="Mis Viajes"
         onMenuOpen={() => setIsSideMenuOpen(true)}
         onNotificationsOpen={onNotificationsOpen}
         notificationCount={notificationCount}

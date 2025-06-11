@@ -249,7 +249,6 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
     return (
       <div className="min-h-screen bg-neutral-50">
         <AppBar 
-          title="Amigos"
           onMenuOpen={() => setIsSideMenuOpen(true)}
           onNotificationsOpen={onNotificationsOpen}
           notificationCount={notificationCount}
@@ -269,7 +268,6 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
     return (
       <div className="min-h-screen bg-neutral-50">
         <AppBar 
-          title="Amigos"
           onMenuOpen={() => setIsSideMenuOpen(true)}
           onNotificationsOpen={onNotificationsOpen}
           notificationCount={notificationCount}
@@ -288,7 +286,6 @@ export default function Amigos({ onNotificationsOpen, notificationCount }: { onN
   return (
     <div className="min-h-screen bg-neutral-50">
       <AppBar 
-        title="Amigos"
         onMenuOpen={() => setIsSideMenuOpen(true)}
         onNotificationsOpen={onNotificationsOpen}
         notificationCount={notificationCount}

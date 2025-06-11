@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthContext } from '../contexts/AuthContexts';
-import { HiOutlineX } from 'react-icons/hi';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
@@ -94,56 +94,58 @@ export default function NotificationsPanel({ isOpen, onClose, onNotificationRead
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <>
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
-          <div className="w-full max-w-md bg-white h-full shadow-xl">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Notificaciones</h2>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <HiOutlineX size={24} />
-              </button>
-            </div>
-            <div className="p-4">
-              {notifications.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No hay notificaciones</p>
-              ) : (
-                <div className="space-y-4">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-3 rounded-lg ${
-                        notification.read ? 'bg-gray-50' : 'bg-blue-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium">{notification.title}</h4>
-                          <p className="text-sm text-gray-600">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {format(new Date(notification.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
-                          </p>
-                        </div>
-                        {!notification.read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Marcar como leída
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+    <div
+      className={`fixed inset-0 bg-black/70 z-50 transition-opacity duration-300 backdrop-blur-md ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      onClick={onClose}
+    >
+      <div
+        className={`w-80 max-w-xs bg-white h-full shadow-xl absolute right-0 top-0 transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 border-b flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Notificaciones</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
         </div>
-      )}
-    </>
+        <div className="p-4">
+          {notifications.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">No hay notificaciones</p>
+          ) : (
+            <div className="space-y-4">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-3 rounded-lg ${
+                    notification.read ? 'bg-gray-50' : 'bg-blue-50'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium">{notification.title}</h4>
+                      <p className="text-sm text-gray-600">{notification.message}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {format(new Date(notification.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+                      </p>
+                    </div>
+                    {!notification.read && (
+                      <button
+                        onClick={() => markAsRead(notification.id)}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Marcar como leída
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 } 

@@ -76,7 +76,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-50">
-        <AppBar title="Perfil" />
+        <AppBar />
         <div className="max-w-4xl mx-auto p-6">
           <div className="animate-pulse">
             <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
@@ -93,7 +93,7 @@ export default function Profile() {
   if (error) {
     return (
       <div className="min-h-screen bg-neutral-50">
-        <AppBar title="Perfil" />
+        <AppBar />
         <div className="max-w-4xl mx-auto p-6">
           <div className="bg-red-50 text-red-500 p-4 rounded-lg">
             {error}
@@ -106,7 +106,6 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-neutral-50">
       <AppBar 
-        title="Perfil" 
         onMenuOpen={() => setIsSideMenuOpen(true)}
       />
       

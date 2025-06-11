@@ -311,21 +311,17 @@ export default function CrearViaje({ onNotificationsOpen, notificationCount }: {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 pb-20 page-enter-animation">
       <AppBar 
-        title="Nuevo viaje" 
-        leftButton={{ 
-          text: "Cancelar", 
-          onClick: () => router.back() 
-        }} 
-        rightButton={{ 
-          text: "Guardar", 
-          disabled: !validateForm() || loading, 
-          onClick: handleSubmit 
-        }}
         onMenuOpen={() => setIsSideMenuOpen(true)}
         onNotificationsOpen={onNotificationsOpen}
         notificationCount={notificationCount}
+        leftButton={{ text: "Cancelar", onClick: () => router.back() }}
+        rightButton={{
+          text: "Guardar",
+          disabled: !validateForm() || loading || uploadingImage,
+          onClick: handleSubmit,
+        }}
       />
       
       <div className="max-w-2xl mx-auto p-6">

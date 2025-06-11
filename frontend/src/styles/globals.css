@@ -3,13 +3,67 @@
 @tailwind utilities;
 
 /* Estilo global para evitar overflow en pantallas móviles */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', sans-serif;
   background-color: #F5F5F5; /* Neutral */
   color: #333333; /* Texto oscuro */
   overflow-x: hidden;
+}
+
+/* Clases de fuente personalizadas */
+.font-script {
+  font-family: 'Birthstone', cursive;
+}
+
+/* Animación de entrada para tarjetas */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-card {
+  animation: slideInUp 0.5s ease-out forwards;
+}
+
+/* Animación de pulso para el botón flotante */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Animación de entrada para páginas (fade-in y slide-up) */
+@keyframes pageFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter-animation {
+  animation: pageFadeInUp 0.4s ease-out forwards;
 }
 
 /* Clase para contenedores principales */

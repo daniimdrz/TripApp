@@ -301,9 +301,8 @@ export default function Home({ onNotificationsOpen, notificationCount }: { onNot
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20">
+    <div className="min-h-screen bg-neutral-50 pb-20 page-enter-animation">
       <AppBar 
-        title="Mis Viajes" 
         onMenuOpen={() => setIsSideMenuOpen(true)}
         onNotificationsOpen={onNotificationsOpen}
         notificationCount={notificationCount}
@@ -325,7 +324,7 @@ export default function Home({ onNotificationsOpen, notificationCount }: { onNot
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {getFilteredTrips().map((trip) => (
+            {getFilteredTrips().map((trip, index) => (
               <TripCard 
                 key={trip.id}
                 id={trip.id}
@@ -338,13 +337,12 @@ export default function Home({ onNotificationsOpen, notificationCount }: { onNot
                 status={trip.status}
                 type={trip.type}
                 onEdit={() => handleEditClick(trip.id)}
+                index={index}
               />
             ))}
           </div>
         )}
       </div>
-
-      <FloatingButton onClick={() => router.push('/crear-viaje')} />
 
       <SideMenu 
         isOpen={isSideMenuOpen}

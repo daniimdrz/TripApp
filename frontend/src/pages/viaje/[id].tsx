@@ -128,8 +128,9 @@ export default function TripDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppBar title="Cargando..." />
-        <div className="container mx-auto px-4 py-8">
+        <AppBar 
+        onMenuOpen={() => setIsSideMenuOpen(true)}/>
+        <div className="flex items-center justify-center min-h-screen">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
@@ -147,8 +148,9 @@ export default function TripDetailPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppBar title="Error" />
-        <div className="container mx-auto px-4 py-8">
+        <AppBar 
+        onMenuOpen={() => setIsSideMenuOpen(true)}/>
+        <div className="flex items-center justify-center min-h-screen">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-600">{error}</p>
           </div>
@@ -160,8 +162,9 @@ export default function TripDetailPage() {
   if (!trip) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppBar title="Viaje no encontrado" />
-        <div className="container mx-auto px-4 py-8">
+        <AppBar 
+        onMenuOpen={() => setIsSideMenuOpen(true)}/>
+        <div className="flex items-center justify-center min-h-screen">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-600">Viaje no encontrado</p>
           </div>
@@ -172,8 +175,7 @@ export default function TripDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppBar title={trip.name || "Detalle del Viaje"} 
-      onMenuOpen={() => setIsSideMenuOpen(true)}/>
+      <AppBar onMenuOpen={() => setIsSideMenuOpen(true)}/>
       <div className="container mx-auto px-4 py-8">
         {/* Sección de Detalles */}
         <section className="pt-4 pb-12">

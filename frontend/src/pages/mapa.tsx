@@ -53,7 +53,6 @@ export default function Mapa() {
   return (
     <div className="min-h-screen bg-neutral-50">
       <AppBar 
-        title="Mapa de Viajes"
         onMenuOpen={() => setIsSideMenuOpen(true)}
       />
       
