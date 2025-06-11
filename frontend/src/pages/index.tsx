@@ -301,7 +301,7 @@ export default function Home({ onNotificationsOpen, notificationCount }: { onNot
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20 page-enter-animation">
+    <div className="min-h-screen bg-neutral-50 page-enter-animation">
       <AppBar 
         onMenuOpen={() => setIsSideMenuOpen(true)}
         onNotificationsOpen={onNotificationsOpen}
