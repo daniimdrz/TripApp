@@ -14,7 +14,8 @@ export default function TripCard({
     cover_image_url,
     status,
     onEdit,
-    type
+    type,
+    index
   }: { 
     id: string;
     name: string; 
@@ -26,6 +27,7 @@ export default function TripCard({
     status: string;
     onEdit: (tripId: string) => void;
     type: string;
+    index: number;
   }) {
     const router = useRouter();
 
@@ -60,8 +62,9 @@ export default function TripCard({
   
     return (
       <div 
-        className="bg-white rounded-xl shadow-card overflow-hidden mb-4 cursor-pointer hover:shadow-lg transition-shadow"
+        className="bg-white rounded-xl shadow-card overflow-hidden mb-4 cursor-pointer hover:shadow-lg transition-shadow slide-in-card"
         onClick={handleCardClick}
+        style={{ animationDelay: `${index * 0.1}s` }}
       >
         {cover_image_url && (
           <div className="h-32 w-full">
