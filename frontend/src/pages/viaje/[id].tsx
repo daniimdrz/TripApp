@@ -18,6 +18,17 @@ interface TripDetail {
   }[];
 }
 
+interface SupabaseTripDetail {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  trip_detail_photos: {
+    id: string;
+    photo_url: string;
+  }[];
+}
+
 interface TripInfo {
   id: string;
   name: string;
@@ -58,7 +69,7 @@ export default function TripDetailPage() {
       setTrip(tripData);
 
       // Fetch trip details with photos
-      const { data: detailsData, error: detailsError } = await supabase
+      const { data: detailsDataRaw, error: detailsError } = await supabase
         .from('trip_details')
         .select(`
           id,
@@ -74,13 +85,21 @@ export default function TripDetailPage() {
         .order('created_at', { ascending: false });
 
       if (detailsError) throw detailsError;
-      setTripDetails(detailsData.map(detail => ({
-        id: detail.id,
-        title: detail.title,
-        description: detail.description,
-        created_at: detail.created_at,
-        photos: detail.trip_detail_photos || []
-      })));
+
+      const detailsData: SupabaseTripDetail[] = detailsDataRaw as SupabaseTripDetail[];
+
+      setTripDetails(
+        detailsData.map(detail => ({
+          id: detail.id,
+          title: detail.title,
+          description: detail.description,
+          created_at: detail.created_at,
+          photos: detail.trip_detail_photos?.map(photo => ({
+            id: photo.id,
+            photo_url: photo.photo_url
+          })) || []
+        }))
+      );
 
     } catch (error: unknown) {
       console.error('Error fetching trip details:', error);
