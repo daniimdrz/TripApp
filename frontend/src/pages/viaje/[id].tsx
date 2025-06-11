@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import AppBar from '../../components/AppBar';
 import { supabase } from '../../lib/supabase';
@@ -27,13 +27,7 @@ export default function TripDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      fetchTripAndDetails();
-    }
-  }, [id]);
-
-  const fetchTripAndDetails = async () => {
+  const fetchTripAndDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -55,6 +49,7 @@ export default function TripDetailPage() {
           id,
           title,
           description,
+          created_at,
           trip_detail_photos (
             id,
             photo_url
@@ -68,16 +63,23 @@ export default function TripDetailPage() {
         id: detail.id,
         title: detail.title,
         description: detail.description,
+        created_at: detail.created_at,
         photos: detail.trip_detail_photos || []
       })));
 
-    } catch (error: Error) {
+    } catch (error: unknown) {
       console.error('Error fetching trip details:', error);
       setError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, setLoading, setError, setTrip, setTripDetails, supabase]);
+
+  useEffect(() => {
+    if (id) {
+      fetchTripAndDetails();
+    }
+  }, [id, fetchTripAndDetails]);
 
   const handleAddSuccess = () => {
     fetchTripAndDetails();
