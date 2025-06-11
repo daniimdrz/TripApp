@@ -58,7 +58,7 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
       setNotifications(data || []);
       
       // Actualizar contador de no leídas
-      const unread = data?.filter(n => !n.read).length || 0;
+      const unread = data?.filter((n: Notification) => !n.read).length || 0;
       setUnreadCount(unread);
     } catch (error) {
       console.error('Error al cargar notificaciones:', error);
