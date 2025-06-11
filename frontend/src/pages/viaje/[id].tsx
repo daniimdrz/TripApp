@@ -21,14 +21,8 @@ interface TripDetail {
 export default function TripDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { user } = useAuthContext();
   const [trip, setTrip] = useState<any>(null);
-  const [tripDetails, setTripDetails] = useState<{
-    id: string;
-    title: string;
-    description: string;
-    photos: { id: string; photo_url: string; }[];
-  }[]>([]);
+  const [tripDetails, setTripDetails] = useState<TripDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -77,9 +71,9 @@ export default function TripDetailPage() {
         photos: detail.trip_detail_photos || []
       })));
 
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Error fetching trip details:', error);
-      setError(error.message);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
     }
@@ -96,7 +90,7 @@ export default function TripDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppBar />
+        <AppBar title="Cargando..." />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
@@ -115,7 +109,7 @@ export default function TripDetailPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppBar />
+        <AppBar title="Error" />
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-600">{error}</p>
@@ -128,7 +122,7 @@ export default function TripDetailPage() {
   if (!trip) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppBar />
+        <AppBar title="Viaje no encontrado" />
         <div className="container mx-auto px-4 py-8">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-600">Viaje no encontrado</p>
@@ -140,7 +134,7 @@ export default function TripDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppBar />
+      <AppBar title={trip.name || "Detalle del Viaje"} />
       <div className="container mx-auto px-4 py-8">
         {/* Trip Header */}
         <div className="bg-white rounded-xl shadow-card p-6 mb-6">

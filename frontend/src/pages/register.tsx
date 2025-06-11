@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthContext } from '../contexts/AuthContexts'
 import AppBar from '../components/AppBar'
-import { supabase } from '../lib/supabase'
 
 export default function Register() {
   const [email, setEmail] = useState('')
