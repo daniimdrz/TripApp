@@ -126,7 +126,6 @@ export default function BuscarDestinos() {
   return (
     <div className="min-h-screen bg-neutral-50">
       <AppBar 
-        title="Favoritos"
         onMenuOpen={() => setIsSideMenuOpen(true)}
       />
       
