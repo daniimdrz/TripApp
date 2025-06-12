@@ -31,14 +31,14 @@ export const CityMap: React.FC<CityMapProps> = ({
   initialZoom = 4,
 }) => {
   const [canUseMapbox, setCanUseMapbox] = useState<boolean>(true);
-  const [usageCount, setUsageCount] = useState<number>(0);
+  const [usageStats, setUsageStats] = useState<{ mapLoads: number; searches: number }>({ mapLoads: 0, searches: 0 });
 
   useEffect(() => {
     const checkUsage = async () => {
       const canUse = await checkMapboxUsage();
       const usage = await getMapboxUsage();
       setCanUseMapbox(canUse);
-      setUsageCount(usage);
+      setUsageStats(usage);
     };
     checkUsage();
   }, []);
@@ -49,7 +49,7 @@ export const CityMap: React.FC<CityMapProps> = ({
         <div className="text-center p-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">Límite de uso alcanzado</h3>
           <p className="text-gray-500">
-            Hemos alcanzado el límite de uso de Mapbox ({usageCount} cargas).
+            Hemos alcanzado el límite de uso de Mapbox ({usageStats.mapLoads} cargas).
             Por favor, contacta al administrador para más información.
           </p>
         </div>
