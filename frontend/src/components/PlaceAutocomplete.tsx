@@ -1,4 +1,5 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { checkMapboxSearchUsage, getMapboxUsage } from '../lib/mapbox';
 
 export interface PlaceFeature {
   id: string;
@@ -36,9 +37,26 @@ export default function PlaceAutocomplete({
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<PlaceFeature[]>([]);
   const [loading, setLoading] = useState(false);
+  const [canUseMapbox, setCanUseMapbox] = useState(true);
+  const [usageStats, setUsageStats] = useState({ mapLoads: 0, searches: 0 });
+  const lastSelectedRef = useRef<string | null>(null);
 
   const fetchSuggestions = async (q: string) => {
     if (!q) {
+      setSuggestions([]);
+      return;
+    }
+
+    // Verificar límite de uso de búsquedas
+    const canUse = await checkMapboxSearchUsage();
+    const usage = await getMapboxUsage();
+    
+    console.log('PlaceAutocomplete - Usage check:', { canUse, usage });
+    
+    setCanUseMapbox(canUse);
+    setUsageStats(usage);
+
+    if (!canUse) {
       setSuggestions([]);
       return;
     }
@@ -54,8 +72,6 @@ export default function PlaceAutocomplete({
     });
 
     if (type === 'city' && country) {
-      // Si nos han dado un nombre largo (más de 2 caracteres),
-      // primero geocodificamos para obtener su ISO alpha-2
       let iso2 = country;
       if (country.length > 2) {
         try {
@@ -70,7 +86,6 @@ export default function PlaceAutocomplete({
           // si falla, dejamos iso2 = country (puede ser inválido)
         }
       }
-      // siempre en minúscula y alpha-2
       params.set('country', iso2.toLowerCase());
     }
 
@@ -86,8 +101,12 @@ export default function PlaceAutocomplete({
     setLoading(false);
   };
 
-  // Cuando query cambie, lanzamos el fetch (debounce opcional)
   useEffect(() => {
+    // Si query es justo lo que seleccioné, no vuelvo a fetch
+    if (lastSelectedRef.current === query) {
+      lastSelectedRef.current = null;
+      return;
+    }
     const timer = setTimeout(() => {
       fetchSuggestions(query);
     }, 250);
@@ -99,6 +118,8 @@ export default function PlaceAutocomplete({
   };
 
   const handleSelect = (feat: PlaceFeature) => {
+    // marco mi selección y actualizo
+    lastSelectedRef.current = feat.place_name;
     setQuery(feat.place_name);
     setSuggestions([]);
     onSelect(feat);
@@ -110,9 +131,19 @@ export default function PlaceAutocomplete({
         type="text"
         value={query}
         onChange={handleChange}
+        onFocus={() => {
+          // Reset de lastSelectedRef al enfocar el input
+          lastSelectedRef.current = null;
+        }}
         placeholder={type === 'country' ? 'Buscar país…' : 'Buscar ciudad…'}
         style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+        disabled={!canUseMapbox}
       />
+      {!canUseMapbox && (
+        <div className="text-xs text-red-500 mt-1">
+          Límite de búsquedas de Mapbox alcanzado ({usageStats.searches}/20,000)
+        </div>
+      )}
       {loading && <div style={{ position: 'absolute', top: 36 }}>Cargando…</div>}
       {!loading && suggestions.length > 0 && (
         <ul
@@ -132,7 +163,10 @@ export default function PlaceAutocomplete({
           {suggestions.map((feat) => (
             <li
               key={feat.id}
-              onClick={() => handleSelect(feat)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(feat);
+              }}
               style={{ padding: '8px', cursor: 'pointer' }}
             >
               {feat.place_name}
